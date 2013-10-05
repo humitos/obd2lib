@@ -20,7 +20,7 @@ class OBDConnector(object):
             self.comport,
             self.sertimeout,
             self.reconnattempts,
-            logoutput=True
+            logoutput=False
         )
 
         if self.OBD_Interface.state == 0:  # serial port can not be opened

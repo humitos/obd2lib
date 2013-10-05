@@ -10,7 +10,7 @@ import logging
 class OBDPort(object):
     """OBDPort allows to abstract the communication with ELM-327"""
 
-    def __init__(self, portnum, serial_timeout, max_retries, logoutput=True):
+    def __init__(self, portnum, serial_timeout, max_retries, logoutput=False):
 
         baudrate = 38400
         bytesize = serial.EIGHTBITS
