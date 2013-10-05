@@ -21,8 +21,6 @@ class Elm(object):
 
         self.port = None
         self.keep_going = True
-        self.total_steps = 30
-        self.current_step = 0
         self.read_configfile()
 
     def read_configfile(self):
@@ -33,7 +31,6 @@ class Elm(object):
         self.comport = config.get('elm', 'comport')
         self.reconnattempts = int(config.get('elm', 'reconnattempts'))
         self.sertimeout = int(config.get('elm', 'sertimeout'))
-
 
     def do_cancel(self):
         self.keep_going = False
@@ -78,7 +75,7 @@ class Elm(object):
                 self.sampler_mode(self.connector)
             except KeyboardInterrupt:
                 logging.info('>>> Polling aborted by user, finishing...')
-            self.connector.run_OBD_command('END', self.option)
+            self.connector.run_OBD_command('END')
         logging.info('Work finished')
         return
 
@@ -86,7 +83,6 @@ class Elm(object):
         # TODO: ability to select your car from carsdb
         self.commands = carsdb.PEUGEOT_206['commands']
 
-        self.total_steps = len(self.commands)
         current_step = 1
         total = len(self.commands)
         for i in range(len(self.commands)):
@@ -97,23 +93,22 @@ class Elm(object):
                 # time.sleep(1)
                 return
             # time.sleep(0.1)
-            connector.run_OBD_command(self.commands[i], self.option)
+            connector.run_OBD_command(self.commands[i])
             # time.sleep(.1)
             current_step += 1
-        connector.run_OBD_command('END', self.option)
+        connector.run_OBD_command('END')
         logging.info('Succesfully tested')
 
     def delete_mode(self, connector):
         logging.info(' > Executing CLEAR status command...')
         SERVICE_CLEAR = '04'
-        result, validation = connector.run_OBD_command(
-            SERVICE_CLEAR, self.option)
+        result, validation = connector.run_OBD_command(SERVICE_CLEAR)
         if validation == 'Y':
             logging.info(' > Done! Try again Check mode to take a new '
                          'snapshot of system status...')
         else:
             logging.info(' > Fail! ECU busy, try again in a few later...')
-        connector.run_OBD_command('END', self.option)
+        connector.run_OBD_command('END')
 
     def expert_mode(self, connector):
         logging.info(' > Launching Expert Mode console...')
@@ -173,13 +168,12 @@ May lead to harm in your car if not used wisely. Do you wish to proceed? '
         while self.keep_going is True:
             k = 1
             logging.info(' > Polling parameters: round %i' % round)
-            self.total_steps = len(self.poll_commands)
             for i in range(len(self.poll_commands)):
                 logging.info(' > Getting OBD polling parameter ({0}/{1})...'
                              .format(k, total))
                 if available_pids[i] == 1:
                     data, validation = connector.run_OBD_command(
-                        self.poll_commands[i], self.option)
+                        self.poll_commands[i])
                     time.sleep(.1)
                     if re.search('NO DATA', data) or validation == 'N':
                         available_pids[i] = 0
