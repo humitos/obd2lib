@@ -1,6 +1,8 @@
 obd2lib
 =======
 
+**WARNING: this is a work-in-progress project. Use it at your OWN RISK**
+
 OBD-2 library to read information from cars.
 
 The idea is to record as much information as the car support to create
