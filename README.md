@@ -53,3 +53,55 @@ Permissions
 I needed to add my user to "dialout" group in Ubuntu 13.04
 
     sudo adduser your-user-here dialout
+
+
+Simulator
+---------
+
+I borrow the "rs232-obd-sim" from here
+(http://code.google.com/p/rs232-obd-sim/) and I'm using it to make
+some test in the development process.
+
+It requires "socat". So in Ubuntu I installed it by doing:
+
+    sudo apt-get install socat
+
+and then running in the terminal:
+
+    $ socat -v -x -d -d PTY: PTY:
+    2013/10/05 15:19:15 socat[15553] N PTY is /dev/pts/4
+    2013/10/05 15:19:15 socat[15553] N PTY is /dev/pts/5
+    2013/10/05 15:19:15 socat[15553] N starting data transfer loop with FDs [3,3] and [5,5]
+
+Now, I can connect the "rs232-obd-sim" to /dev/pts/4
+
+    $ python rs232-obd-sim.py /dev/pts/4
+    rs232-obd-sim.py - RS-232 to OBD bridge simulator
+    Copyright (C) 2010 Miguel Gonzalez, Oscar Iglesias
+    This program comes with ABSOLUTELY NO WARRANTY.
+    This is free software, and you are welcome to redistribute it
+    under certain conditions; see the COPYING file for details.
+
+    Starting...
+    CAR>
+
+and, for example, the "run_expert.py" script to /dev/pts/5
+
+     $ python run_expert.py
+     WARNING: You are enabling EXPERT mode!
+     It allows to perform any OBD command against Electronic Control Units.
+     May lead to harm in your car if not used wisely. Do you wish to proceed? (Y/N) Y
+     Type "quit" or CTRL-C to exit
+     ROOT@KT-OBD> 0100
+     0100  41 00 BE 3E A8 11
+     ROOT@KT-OBD> 0101
+     0101  41 01 83 07 E5 00
+     ROOT@KT-OBD> 03
+     03  43 01 43 01 44 01 52
+     ROOT@KT-OBD> 07
+     07  47 01 44 00 00 00 00
+     ROOT@KT-OBD> 0101
+     0101  41 01 83 07 E5 00
+     ROOT@KT-OBD> 011c
+     011C  41 1C 06
+     ROOT@KT-OBD>

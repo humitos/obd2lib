@@ -23,6 +23,17 @@ class Elm(object):
         self.keep_going = True
         self.total_steps = 30
         self.current_step = 0
+        self.read_configfile()
+
+    def read_configfile(self):
+        config = ConfigParser.RawConfigParser()
+        configfilepath = 'config.ini'
+
+        config.read(configfilepath)
+        self.comport = config.get('elm', 'comport')
+        self.reconnattempts = int(config.get('elm', 'reconnattempts'))
+        self.sertimeout = int(config.get('elm', 'sertimeout'))
+
 
     def do_cancel(self):
         self.keep_going = False
@@ -30,7 +41,8 @@ class Elm(object):
     def create_connection(self):
         # TODO: if there is not response from ECU to atz command, the
         # app remains freezed here
-        self.connector = OBDConnector()
+        self.connector = OBDConnector(self.comport, self.reconnattempts,
+                                      self.sertimeout)
         self.serial = self.connector.initCommunication()
         if self.serial != 1:
             logging.error('Connection error...')
