@@ -33,3 +33,21 @@ How to read the answers
 All the information needed to decode the answer is in Wikipedia:
 
  * http://en.wikipedia.org/wiki/OBD-II_PIDs
+
+
+Requeriments
+------------
+
+ * pyserial: http://pyserial.sourceforge.net/
+
+In Ubuntu (or Debian derivates):
+
+    sudo apt-get install python-serial
+
+
+Permissions
+-----------
+
+I needed to add my user to "dialout" group in Ubuntu 13.04
+
+    sudo adduser your-user-here dialout
