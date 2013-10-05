@@ -6,44 +6,44 @@
 ELMdb = {
     '0100': {
         'description': 'OBD-II Ping/keepalive + Request available PIDs',
-        'mnemonic': 'PING'
+        'mnemonic': 'PING',
         'unit': None,
         },
     '0101': {
         'description': 'Number of Diagnosic Trouble Codes',
-        'mnemonic': 'NUM_DTCS'
+        'mnemonic': 'NUM_DTCS',
         'unit': None,
         },
     '0102': {
         'description': 'DTC Causing Freeze Frame',
-        'mnemonic': 'DTCFRZF'
+        'mnemonic': 'DTCFRZF',
         'unit': None,
         },
     '0103': {
         'description': 'Fuel System Status',
-        'mnemonic': 'FUELSYS'
+        'mnemonic': 'FUELSYS',
         'unit': None,
         },
     '0104': {
         'description': 'Calculated Load Value',
         'mnemonic': 'LOAD_PCT',
         'unit': 'Percent scale',
-        }
+        },
     '0105': {
         'description': 'Coolant Temperature',
-        'mnemonic': 'ECT'
+        'mnemonic': 'ECT',
         'unit': 'Degrees Celsius',
         },
     '0106': {
         'description': 'Short Term Fuel Trim',
         'mnemonic': 'SHRTFT1and3',
         'unit': 'Percent scale',
-        }
+        },
     '0107': {
         'description': 'Long Term Fuel Trim',
         'mnemonic': 'LONGFT1and3',
         'unit': 'Percent scale',
-        }
+        },
     '0108': {
         'description': 'Short Term Fuel Trim',
         'mnemonic': 'SHRTFT2and4',
@@ -56,7 +56,7 @@ ELMdb = {
         },
     '010A': {
         'description': 'Fuel Rail Pressure',
-        'mnemonic': 'FRP'
+        'mnemonic': 'FRP',
         'unit': 'KPa',
         },
     '010B': {
@@ -203,6 +203,7 @@ ELMdb = {
         'mnemonic': 'GET_STORED_DTCs',
         'unit': None,
         },
+    # WARNING: this command will clear all DTC codes
     # '04': {
     #     'description': 'Service $04, clear DTCs',
     #     'mnemonic': 'CLEAR_DTCs',
@@ -252,5 +253,5 @@ ELMdb = {
         'description': 'ECU name  message count',
         'mnemonic': 'ECUNAME_COUNT',
         'unit': None,
-        }
+        },
     }
