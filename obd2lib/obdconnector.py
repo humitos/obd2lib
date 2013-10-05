@@ -2,7 +2,6 @@
 
 import re
 import sys
-import ConfigParser
 import logging
 
 from obdport import OBDPort
@@ -10,25 +9,18 @@ from obdport import OBDPort
 
 class OBDConnector(object):
 
-    def __init__(self, record):
-        self.record = record
-        config = ConfigParser.RawConfigParser()
-        configfilepath = 'config.ini'
-
-        config.read(configfilepath)
-        self.COMPORT = config.get('elm', 'COMPORT')
-        self.RECONNATTEMPTS = config.getint('elm', 'RECONNATTEMPTS')
-        self.SERTIMEOUT = config.getint('elm', 'SERTIMEOUT')
-
-        return
+    def __init__(self, comport, reconnattempts, sertimeout):
+        self.comport = comport
+        self.reconnattempts = reconnattempts
+        self.sertimeout = sertimeout
 
     def initCommunication(self):
 
         self.OBD_Interface = OBDPort(
-            self.COMPORT,
-            self.SERTIMEOUT,
-            self.RECONNATTEMPTS,
-            self.record
+            self.comport,
+            self.sertimeout,
+            self.reconnattempts,
+            logoutput=True
         )
 
         if self.OBD_Interface.state == 0:  # serial port can not be opened
@@ -40,7 +32,7 @@ class OBDConnector(object):
                           .format(self.OBD_Interface.portnum))
             return 1
 
-    def run_OBD_command(self, obd_command, option):
+    def run_OBD_command(self, obd_command, expert=False):
 
         if (self.OBD_Interface.state == 1):
             # caution, if UNABLE TO CONNECT is received, OBD_Interface
@@ -60,7 +52,7 @@ class OBDConnector(object):
                 if (re.search('UNABLE', bus_data) or
                         re.search('BUSY', bus_data) or
                         re.search('ERROR', bus_data)) and \
-                        option != '-E':
+                        not expert:
                     logging.warning(
                         'Unable to connect to OBD socket while getting '
                         'parameters, shutting down app... Please check port '

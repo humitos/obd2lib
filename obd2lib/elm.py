@@ -5,8 +5,8 @@ import time
 import logging
 import ConfigParser
 
+import carsdb
 from obdconnector import OBDConnector
-import elm_data
 
 
 class Elm(object):
@@ -19,7 +19,6 @@ class Elm(object):
             '-S'
         ]
 
-        self.record = elm_data.ELM_Data()
         self.port = None
         self.keep_going = True
         self.total_steps = 30
@@ -29,10 +28,9 @@ class Elm(object):
         self.keep_going = False
 
     def create_connection(self):
-        self.record = elm_data.ELM_Data()
         # TODO: if there is not response from ECU to atz command, the
         # app remains freezed here
-        self.connector = OBDConnector(self.record)
+        self.connector = OBDConnector()
         self.serial = self.connector.initCommunication()
         if self.serial != 1:
             logging.error('Connection error...')
@@ -56,7 +54,6 @@ class Elm(object):
         logging.info('Working...')
 
         self.option = option
-        self.record.do_init(option)
 
         if self.option == '-C':
             self.check_mode(self.connector)
@@ -74,7 +71,9 @@ class Elm(object):
         return
 
     def check_mode(self, connector):
-        self.commands = self.record.GetOBD_DBInfo(self.option)
+        # TODO: ability to select your car from carsdb
+        self.commands = carsdb.PEUGEOT_206['commands']
+
         self.total_steps = len(self.commands)
         current_step = 1
         total = len(self.commands)
@@ -131,7 +130,7 @@ May lead to harm in your car if not used wisely. Do you wish to proceed? '
                         pass
                     else:
                         result, validation = connector.run_OBD_command(
-                            user_command, self.option)
+                            user_command, expert=True)
                         if re.search('ERROR', result) or \
                                 re.search('DATA', result):
                             print('ERROR: Wrong command or not supported, '
@@ -147,7 +146,7 @@ May lead to harm in your car if not used wisely. Do you wish to proceed? '
                 except KeyboardInterrupt:
                         break
         logging.info(' >>> Expert mode aborted by user, finishing...')
-        connector.run_OBD_command('END', self.option)
+        connector.run_OBD_command('END', expert=True)
 
     def sampler_mode(self, connector):
         """Poll every single PID once, then only those wich respond"""

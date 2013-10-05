@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import sys
 import serial
-import string
 import time
 import re
 import logging
@@ -10,7 +10,7 @@ import logging
 class OBDPort(object):
     """OBDPort allows to abstract the communication with ELM-327"""
 
-    def __init__(self, portnum, serial_timeout, max_retries, record):
+    def __init__(self, portnum, serial_timeout, max_retries, logoutput=True):
 
         baudrate = 38400
         bytesize = serial.EIGHTBITS
@@ -24,8 +24,9 @@ class OBDPort(object):
         #  0 disconnected (connection failed)
         self.state = 1
         self.portnum = portnum
-        self.record = record
         self.max_retries = max_retries
+        self.log = []
+        self.logoutput = logoutput
 
         # commands to setup before start sending OBD commands
         pre_connect_commands = [
@@ -43,25 +44,29 @@ class OBDPort(object):
         ]
 
         logging.debug('Opening interface (serial port)')
-        self.record.set_info('Opening interface (serial port)')
 
         try:
-            logging.debug('Trying to open designed port "{0}" (serial port)' \
-                              .format(self.portnum))
-            self.record.set_info('Trying to open designed port "{0}" (serial port)' \
-                                     .format(self.portnum))
+            logging.debug('Trying to open designed port "{0}" (serial port)'
+                          .format(self.portnum))
             self.port = serial.Serial(
-                    self.portnum, baudrate, parity=parity, stopbits=stopbits,
-                    bytesize=bytesize, timeout=timeout)
+                self.portnum, baudrate, parity=parity, stopbits=stopbits,
+                bytesize=bytesize, timeout=timeout)
         except serial.SerialException as e:
-            print(e)
-            self.state = 0
-            return None
+            s = re.search(r'\[Errno (\d+)\]', e.message)
+            errno = int(s.groups()[0])
+            if errno == 2:
+                print('No such file or directory: "{0}"'.format(self.portnum))
+                print('Please, check that you have your ELM327 connected to '
+                      'that port')
+                sys.exit(1)
+            else:
+                print(e)
+                self.state = 0
+                return None
 
-        logging.debug('Interface "{0}" scanned successfully'.format(self.port.portstr))
-        self.record.set_info('Interface "{0}" scanned successfully'.format(self.port.portstr))
+        logging.debug('Interface "{0}" scanned successfully'
+                      .format(self.port.portstr))
         logging.debug('Connecting to ECU...')
-        self.record.set_info('Connecting to ECU...')
 
         ready = "ERROR"
         count = 0
@@ -78,8 +83,8 @@ class OBDPort(object):
             if not(re.search('ELM', self.ELMver) or
                    re.search('OK', self.ELMver)):
 
-                logging.warning('Aborted execution: unable to connect to ELM device')
-                self.record.set_info('Aborted execution: unable to connect to ELM device')
+                logging.warning('Aborted execution: unable to connect to ELM '
+                                'device')
 
                 self.close()
                 self.state = 0
@@ -99,19 +104,16 @@ class OBDPort(object):
                     got, validation_test = self.get_result(i)
             else:
                 logging.debug('Connection attempt failed: {0}'.format(ready))
-                self.record.set_info('Connection attempt failed: {0}'.format(ready))
                 ready = 'ERROR'  # Expecting error message: BUSINIT:.ERROR
                 time.sleep(5)
                 logging.debug('Connection attempt: {0}'.format(count))
-                self.record.set_info('Connection attempt: {0}'.format(count))
                 count += 1
                 if count == self.max_retries:
-                    logging.warning('EXECUTION ABORTED: unable to connect after max_retries')
-                    self.record.set_info('EXECUTION ABORTED: unable to connect after max_retries')
+                    logging.warning('EXECUTION ABORTED: unable to connect '
+                                    'after max_retries')
                     self.close()
                     self.state = 0
                     return None
-
 
     def send_command(self, cmd):
         """Internal use only: not a public interface"""
@@ -153,23 +155,23 @@ class OBDPort(object):
                 if re.search(check, test_pattern):
                     valid_response = 'Y'
 
-            logging.info('Output of "{0}": "{1}"'.format(cmd, buffer.strip()))
-            if valid_response != 'SETUP':
-                self.record.set_value(str(cmd),str(string.strip(buffer)))
-            else:
-                self.record.set_info(str(cmd),'SETUP')
+            buffer = buffer.strip()
+            logging.info('Output of "{0}": "{1}"'.format(cmd, buffer))
+            if self.logoutput:
+                self.log_answer(cmd, buffer, valid_response)
 
             return buffer, valid_response
         return None, None
 
+    def log_answer(self, cmd, answer, valid):
+        self.log.append([cmd, answer, valid, time.time()])
+
     def close(self):
         """Resets device and closes all associated filehandles"""
 
-        if (self.port != None) and self.state == 1:
+        if not(self.port is None) and self.state == 1:
             self.send_command("atz")
             self.port.close()
 
         self.port = None
         self.ELMver = "Unknown"
-
-        self.record.do_complete()
