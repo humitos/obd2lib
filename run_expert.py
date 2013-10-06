@@ -1,20 +1,121 @@
 # -*- coding: utf-8 -*-
 
-from obd2lib import elm as elm327
+import re
+import sys
+import logging
+import argparse
 
-elm327.build_logging()
+from obd2lib.obdconnector import OBDConnector
 
-elm = elm327.Elm()
-elm.do_connect()
+MSG_WARNING = '''\
+WARNING: You are enabling EXPERT mode!
 
-# AVAILABLE MODES
-# -C Chec
-#   Perform a check already prepeared.
-# -D Clear
-#   Clears all stored trouble codes and turns the MIL off.
-# -S Sampler
-#   Not sure what this is.
-# -E Expert
-#   Interactive console where you can excecute OBD commands.
-elm.do_test('-E')
-elm.do_disconnect()
+It allows to perform any OBD command against Electronic Control Units.
+May lead to harm in your car if not used wisely. Do you wish to \
+proceed? (Y/N) '''
+
+MSG_DISCLAIMER = '''\
+*** DISCLAIMER: There is absolutely no warranty for any action \
+performed by the user from here on ***
+'''
+
+
+class ExpertMode(object):
+
+    def __init__(self, port, baudrate, attempts, timeout):
+        self.connector = None
+        self.keep_going = True
+
+        self.port = port
+        self.baudrate = baudrate
+        self.attempts = attempts
+        self.timeout = timeout
+
+    def connect(self):
+        self.connector = OBDConnector(
+            self.port, self.attempts, self.timeout)
+        logging.info('Connecting...')
+        success = self.connector.initCommunication()
+        if success != 1:
+            logging.error('Connection error...')
+            sys.exit(1)
+        logging.info('Connected')
+
+    def run(self):
+        if self.connector is None:
+            logging.error('You should connect to the port first.')
+            sys.exit(1)
+
+        logging.info(' > Launching Expert Mode console...')
+        choice = ''
+        valid_answers = ['Y', 'N']
+        while choice not in valid_answers:
+            choice = raw_input(MSG_WARNING)
+        if choice.upper() == 'Y':
+            logging.warning(MSG_DISCLAIMER)
+            print('Type "quit" or CTRL-C to exit')
+
+            while self.keep_going is True:
+                try:
+                    user_command = raw_input('ROOT@KT-OBD> ').upper()
+                    if re.search('\AAT', user_command):
+                        print('Wrong command, ELM configuration is not '
+                              'allowed')
+                    elif re.search('QUIT', user_command):
+                        raise KeyboardInterrupt
+                    elif user_command == '':
+                        pass
+                    else:
+                        result, validation = self.connector.run_OBD_command(
+                            user_command, expert=True)
+                        if re.search('ERROR', result) or \
+                                re.search('DATA', result):
+                            print('ERROR: Wrong command or not supported, '
+                                  'type another one')
+                        elif re.search('BUSY', result):
+                            print('ERROR: Bus busy, try again')
+                        elif re.search('UNABLE', result):
+                            print('ERROR: Communication lost, shutting '
+                                  'down app!')
+                            break
+                        else:
+                            print(result)
+                except KeyboardInterrupt:
+                        break
+        logging.info(' >>> Expert mode aborted by user, finishing...')
+        self.connector.run_OBD_command('END', expert=True)
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        description='Connect to OBDII interface in an '
+        'interactive console (Expert Mode)')
+    parser.add_argument(
+        '-p', '--port',
+        help='port to connect (default: /dev/ttyUSB0)',
+        default='/dev/ttyUSB0')
+    parser.add_argument(
+        '-b', '--baudrate', type=int,
+        help='baudrate used to connect to the port (default: 38400)',
+        default=38400)
+    parser.add_argument('-a', '--attempts', type=int, default=10,
+                        help='connection attempts (default: 10)')
+    parser.add_argument(
+        '-t', '--timeout', type=int,
+        help='timeout for the connection to the port (default: 10)',
+        default=10)
+    parser.add_argument(
+        '-v', '--verbose', action="store_true",
+        help='show logging.DEBUG into stdout')
+
+    args = parser.parse_args()
+
+    if args.verbose:
+        logging.basicConfig(format='%(levelname)s:%(message)s',
+                            level=logging.DEBUG)
+
+    expert_mode = ExpertMode(args.port, args.baudrate,
+                             args.attempts, args.timeout)
+    expert_mode.connect()
+    expert_mode.run()
