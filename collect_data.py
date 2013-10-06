@@ -4,8 +4,7 @@ import sys
 import csv
 import time
 import logging
-# import argparse
-import ConfigParser
+import argparse
 
 from obd2lib.elmdb import ELMdb
 from obd2lib.obdconnector import OBDConnector
@@ -13,24 +12,26 @@ from obd2lib.obdconnector import OBDConnector
 
 class CollectData(object):
 
-    def __init__(self, logfile, configfile, commands, interval=1):
+    def __init__(self, port, baudrate, reconnattempts,
+                 sertimeout, logfile, commands,
+                 command_attempts, interval):
 
         self.commands = commands
-        self.invalid_commands = []
+        self.command_attempts = command_attempts
+        self.invalid_commands = {}
         self.logfile = logfile
         self.keep_going = True
         self.connector = None
         self.interval = interval
 
-        config = ConfigParser.RawConfigParser()
-        config.read(configfile)
-        self.comport = config.get('elm', 'comport')
-        self.reconnattempts = int(config.get('elm', 'reconnattempts'))
-        self.sertimeout = int(config.get('elm', 'sertimeout'))
+        self.port = port
+        self.baudrate = baudrate
+        self.reconnattempts = reconnattempts
+        self.sertimeout = sertimeout
 
     def connect(self):
         self.connector = OBDConnector(
-            self.comport, self.reconnattempts, self.sertimeout)
+            self.port, self.baudrate, self.reconnattempts, self.sertimeout)
         logging.info('Connecting...')
         success = self.connector.initCommunication()
         if success != 1:
@@ -43,7 +44,8 @@ class CollectData(object):
             logging.error('You should connect to the port first.')
             sys.exit(1)
         for i, command in enumerate(self.commands):
-            if command in self.invalid_commands:
+            if command in self.invalid_commands and \
+                    self.invalid_commands[command] == self.command_attempts:
                 logging.info(' > Skipping command "{0}" ({1}/{2})...'
                              .format(command, i, len(self.commands)))
                 continue
@@ -53,8 +55,12 @@ class CollectData(object):
             answer, valid = self.connector.run_OBD_command(command)
 
             if valid == 'N':
-                # do not call this command again
-                self.invalid_commands.append(command)
+                # do not call this command again after
+                # "self.command_attempt" times
+                if command in self.invalid_commands:
+                    self.invalid_commands[command] += 1
+                else:
+                    self.invalid_commands[command] = 1
 
             with open(self.logfile, 'ab') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',',
@@ -77,19 +83,44 @@ class CollectData(object):
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        description='Collect data periodically from the car using OBDII '
+        'interface')
+    parser.add_argument(
+        '-p', '--port',
+        help='port to connect (default: /dev/ttyUSB0)',
+        default='/dev/ttyUSB0')
+    parser.add_argument(
+        '-b', '--baudrate', type=int,
+        help='baudrate used to connect to the port (default: 38400)',
+        default=38400)
+    parser.add_argument('-i', '--interval', type=int, default=1,
+                        help='interval between queries (default: 1)')
+    parser.add_argument('-a', '--attempts', type=int, default=10,
+                        help='connection attempts (default: 10)')
+    parser.add_argument('-c', '--command-attempts', type=int, default=3,
+                        help='attempts to try an invalid command (default: 3)')
+    parser.add_argument(
+        '-t', '--timeout', type=int,
+        help='timeout for the connection to the port (default: 10)',
+        default=10)
+    parser.add_argument(
+        '-v', '--verbose', action="store_true",
+        help='show logging.DEBUG into stdout')
+
+    args = parser.parse_args()
+
+    if args.verbose:
+        logging.basicConfig(
+            format='%(levelname)s:%(asctime)s:%(name)s:%(message)s',
+            level=logging.DEBUG)
+
     logfile = time.strftime('%Y%m%d-%H%M%S-obd-data.log')
-
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.INFO)
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
-    logger = logging.getLogger()
-    logger.addHandler(ch)
-
-    configfile = 'config.ini'
     commands = ELMdb.keys()
 
-    collect = CollectData(logfile, configfile, commands)
+    collect = CollectData(
+        args.port, args.baudrate, args.attempts, args.timeout,
+        logfile, commands, args.command_attempts, args.interval)
     collect.connect()
     collect.run()

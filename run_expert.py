@@ -22,18 +22,18 @@ performed by the user from here on ***
 
 class ExpertMode(object):
 
-    def __init__(self, port, baudrate, attempts, timeout):
+    def __init__(self, port, baudrate, reconnattempts, sertimeout):
         self.connector = None
         self.keep_going = True
 
         self.port = port
         self.baudrate = baudrate
-        self.attempts = attempts
-        self.timeout = timeout
+        self.reconnattempts = reconnattempts
+        self.sertimeout = sertimeout
 
     def connect(self):
         self.connector = OBDConnector(
-            self.port, self.attempts, self.timeout)
+            self.port, self.baudrate, self.reconnattempts, self.sertimeout)
         logging.info('Connecting...')
         success = self.connector.initCommunication()
         if success != 1:
@@ -99,10 +99,10 @@ if __name__ == '__main__':
         '-b', '--baudrate', type=int,
         help='baudrate used to connect to the port (default: 38400)',
         default=38400)
-    parser.add_argument('-a', '--attempts', type=int, default=10,
+    parser.add_argument('-a', '--reconnattempts', type=int, default=10,
                         help='connection attempts (default: 10)')
     parser.add_argument(
-        '-t', '--timeout', type=int,
+        '-t', '--sertimeout', type=int,
         help='timeout for the connection to the port (default: 10)',
         default=10)
     parser.add_argument(
@@ -116,6 +116,6 @@ if __name__ == '__main__':
                             level=logging.DEBUG)
 
     expert_mode = ExpertMode(args.port, args.baudrate,
-                             args.attempts, args.timeout)
+                             args.reconnattempts, args.sertimeout)
     expert_mode.connect()
     expert_mode.run()

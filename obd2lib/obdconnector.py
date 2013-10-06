@@ -9,15 +9,17 @@ from obdport import OBDPort
 
 class OBDConnector(object):
 
-    def __init__(self, comport, reconnattempts, sertimeout):
-        self.comport = comport
+    def __init__(self, port, baudrate, reconnattempts, sertimeout):
+        self.port = port
+        self.baudrate = baudrate
         self.reconnattempts = reconnattempts
         self.sertimeout = sertimeout
 
     def initCommunication(self):
 
         self.OBD_Interface = OBDPort(
-            self.comport,
+            self.port,
+            self.baudrate,
             self.sertimeout,
             self.reconnattempts,
             logoutput=False
