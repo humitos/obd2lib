@@ -74,3 +74,7 @@ def hex_to_int(str):
 
     i = eval("0x" + str, {}, {})
     return i
+
+
+def slugify(s):
+    return s.replace(' ', '-').lower()

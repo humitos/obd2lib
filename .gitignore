@@ -1,6 +1,8 @@
 *.log
 *.py[cod]
 *~
+*.png
+*.svg
 
 # C extensions
 *.so
