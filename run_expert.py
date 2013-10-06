@@ -5,6 +5,7 @@ import sys
 import logging
 import argparse
 
+from obd2lib.elmdecoder import decode_answer
 from obd2lib.obdconnector import OBDConnector
 
 MSG_WARNING = '''\
@@ -22,7 +23,7 @@ performed by the user from here on ***
 
 class ExpertMode(object):
 
-    def __init__(self, port, baudrate, reconnattempts, sertimeout):
+    def __init__(self, port, baudrate, reconnattempts, sertimeout, lazy_mode):
         self.connector = None
         self.keep_going = True
 
@@ -30,6 +31,8 @@ class ExpertMode(object):
         self.baudrate = baudrate
         self.reconnattempts = reconnattempts
         self.sertimeout = sertimeout
+
+        self.lazy_mode = lazy_mode
 
     def connect(self):
         self.connector = OBDConnector(
@@ -68,6 +71,7 @@ class ExpertMode(object):
                     else:
                         result, validation = self.connector.run_OBD_command(
                             user_command, expert=True)
+
                         if re.search('ERROR', result) or \
                                 re.search('DATA', result):
                             print('ERROR: Wrong command or not supported, '
@@ -79,7 +83,12 @@ class ExpertMode(object):
                                   'down app!')
                             break
                         else:
-                            print(result)
+                            if self.lazy_mode:
+                                value, unit = decode_answer(
+                                    user_command, result)
+                                print('{0} {1}'.format(value, unit))
+                            else:
+                                print(result)
                 except KeyboardInterrupt:
                         break
         logging.info(' >>> Expert mode aborted by user, finishing...')
@@ -106,7 +115,10 @@ if __name__ == '__main__':
         help='timeout for the connection to the port (default: 10)',
         default=10)
     parser.add_argument(
-        '-v', '--verbose', action="store_true",
+        '--lazy-mode', action='store_true',
+        help='convert the answer into a human-readable way')
+    parser.add_argument(
+        '-v', '--verbose', action='store_true',
         help='show logging.DEBUG into stdout')
 
     args = parser.parse_args()
@@ -116,6 +128,7 @@ if __name__ == '__main__':
                             level=logging.DEBUG)
 
     expert_mode = ExpertMode(args.port, args.baudrate,
-                             args.reconnattempts, args.sertimeout)
+                             args.reconnattempts, args.sertimeout,
+                             args.lazy_mode)
     expert_mode.connect()
     expert_mode.run()
