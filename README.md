@@ -21,12 +21,13 @@ How to use it
 -------------
 
     >>> from obd2lib.obdconnector import OBDConnector
-    >>> connector = OBDConnector('/dev/ttyUSB0', 5, 10)
+    >>> connector = OBDConnector('/dev/ttyUSB0', 38400, 5, 10)
     >>> connector.initCommunication()
     1
     >>> connector.run_OBD_command('0100')
     ('86 F1 10 41 00 BE 3E B0 11 85', 'Y')
     >>> connector.run_OBD_command('END')
+    >>>
 
 
 How to read the answers
@@ -87,10 +88,11 @@ Now, I can connect the "rs232-obd-sim" to /dev/pts/4
 
 and, for example, the "run_expert.py" script to /dev/pts/5
 
-     $ python run_expert.py
-     WARNING: You are enabling EXPERT mode!
+     $ python run_expert.py -p /dev/pts/5
      It allows to perform any OBD command against Electronic Control Units.
      May lead to harm in your car if not used wisely. Do you wish to proceed? (Y/N) Y
+     WARNING:root:*** DISCLAIMER: There is absolutely no warranty for any action performed by the user from here on ***
+
      Type "quit" or CTRL-C to exit
      ROOT@KT-OBD> 0100
      0100  41 00 BE 3E A8 11
@@ -104,4 +106,5 @@ and, for example, the "run_expert.py" script to /dev/pts/5
      0101  41 01 83 07 E5 00
      ROOT@KT-OBD> 011c
      011C  41 1C 06
-     ROOT@KT-OBD>
+     ROOT@KT-OBD> quit
+     $
