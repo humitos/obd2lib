@@ -105,6 +105,8 @@ class OBDPort(object):
                     got, validation_test = self.get_result(i)
             else:
                 logging.debug('Connection attempt failed: {0}'.format(ready))
+                logging.warning('Be sure that the key is in the '
+                                'IGNITION position')
                 ready = 'ERROR'  # Expecting error message: BUSINIT:.ERROR
                 time.sleep(5)
                 logging.debug('Connection attempt: {0}'.format(count))
