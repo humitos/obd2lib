@@ -38,6 +38,18 @@ All the information needed to decode the answer is in Wikipedia:
  * http://en.wikipedia.org/wiki/OBD-II_PIDs
 
 
+Collect and create graphics
+---------------------------
+
+I wrote two command line utilities to collect data
+(``collect_data.py``) through the OBD-II interface while your are
+driving and store it in a file. After that, this file is processed
+with another script (``generate_graphic.py``) to create some nice
+graphics like this one:
+
+![](http://oi41.tinypic.com/vxlt7n.jpg)
+
+
 Requeriments
 ------------
 
@@ -91,7 +103,8 @@ and, for example, the "run_expert.py" script to /dev/pts/5
      $ python run_expert.py -p /dev/pts/5
      It allows to perform any OBD command against Electronic Control Units.
      May lead to harm in your car if not used wisely. Do you wish to proceed? (Y/N) Y
-     WARNING:root:*** DISCLAIMER: There is absolutely no warranty for any action performed by the user from here on ***
+     WARNING:root:*** DISCLAIMER: There is absolutely no warranty for
+     any action performed by the user from here on ***
 
      Type "quit" or CTRL-C to exit
      ROOT@KT-OBD> 0100
