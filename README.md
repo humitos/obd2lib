@@ -44,7 +44,7 @@ Collect and create graphics
 I wrote two command line utilities to collect data
 (``collect_data.py``) through the OBD-II interface while your are
 driving and store it in a file. After that, this file is processed
-with another script (``generate_graphic.py``) to create some nice
+with another script (``generate_graphs.py``) to create some nice
 graphics like this one:
 
 ![](http://oi41.tinypic.com/vxlt7n.jpg)
