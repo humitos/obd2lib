@@ -3,7 +3,8 @@ obd2lib
 
 **WARNING: this is a work-in-progress project. Use it at your OWN RISK**
 
-OBD-2 library to read information from cars.
+Python OBD-2 library to read information from cars using an ELM327 (or
+similar) as interface.
 
 The idea is to record as much information as the car support to create
 graphs and stats with that data about the car.
@@ -13,8 +14,9 @@ and its software published under GPL license.
 
  * http://code.google.com/p/karmind-obd-application/
 
-Since I did not receive any answer from the original authors, I
-started coding by myself and changing some functionality that I need.
+Since I did receive an answer from the original author telling me that
+the project doesn't have support now I started coding by myself and
+changing some functionality that I need.
 
 
 How to use it
@@ -37,6 +39,10 @@ All the information needed to decode the answer is in Wikipedia:
 
  * http://en.wikipedia.org/wiki/OBD-II_PIDs
 
+and ELM pdf datasheet:
+
+ * http://elmelectronics.com/DSheets/ELM327DS.pdf
+
 
 Collect and create graphics
 ---------------------------
@@ -54,10 +60,22 @@ Requeriments
 ------------
 
  * pyserial: http://pyserial.sourceforge.net/
+ * pygal: http://pygal.org/ (required to create graphics)
+ * argparse: https://pypi.python.org/pypi/argparse (just for Python < 2.7)
+ * inkscape: http://inkscape.org/ (required to convert .svg to .png)
 
-In Ubuntu (or Debian derivates):
+Using pip:
 
-    sudo apt-get install python-serial
+    pip install pyserial pygal argparse
+
+or
+
+    pip install -r requeriments.txt
+
+
+and in Ubuntu (or Debian derivates):
+
+    sudo apt-get install inkscape
 
 
 Permissions
