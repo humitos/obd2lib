@@ -69,8 +69,8 @@ class Elm(threading.Thread):
                 b += c
                 if c == '\n':
                     flag = False
-        command = "".join(b[:-2]).upper()
-        self.notify(command)
+        command = "".join(b[:-2])
+        self.notify(command.upper())
 
     def spacifyDecorator(self, str):
         """ Introduces a space between eand 2 characters"""
