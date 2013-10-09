@@ -41,7 +41,7 @@ def collect_data(args):
 
 def expert_mode(args):
     expert_mode = ExpertMode(args.port, args.baudrate,
-                             args.connection_onnattempts, args.sertimeout,
+                             args.connection_attempts, args.timeout,
                              args.lazy)
     expert_mode.connect()
     expert_mode.run()
@@ -49,7 +49,8 @@ def expert_mode(args):
 
 def info(args):
     info = Info(args.port, args.baudrate,
-                args.connection_attempts, args.sertimeout)
+                args.connection_attempts, args.timeout,
+                args.lazy)
     info.connect()
     info.run()
 

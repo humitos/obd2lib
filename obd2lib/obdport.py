@@ -31,17 +31,17 @@ class OBDPort(object):
 
         # commands to setup before start sending OBD commands
         pre_connect_commands = [
-            'ate0',
-            'ati',
-            'ath1',
-            'atsp0'
+            'ate0',  # character echo ON (00 -> ON, FF -> OFF)
+            'ati',  # request for the product ID string
+            'ath1',  # printing of header bytes (0 -> OFF, 1 -> ON)
+            'atsp0'  # set protocol to AUTO
         ]
 
         # commands to send before closing the connection
         post_connect_commands = [
-            'atdp',
-            'atdpn',
-            'atstff'
+            'atdp',  # display protocol
+            'atdpn',  # display protocol by number
+            'atstff'  # set the "NO DATA" timeout to 0xFF
         ]
 
         logging.debug('Opening interface (serial port)')
@@ -74,7 +74,7 @@ class OBDPort(object):
 
         while ready == "ERROR":  # until error is returned try to connect
             try:
-                self.send_command('atz')  # initialize
+                self.send_command('atz')  # reset chips
             except serial.SerialException as e:
                 print(e)
                 self.state = 0
@@ -162,6 +162,15 @@ class OBDPort(object):
             logging.info('Output of "{0}": "{1}"'.format(cmd, buffer))
             if self.logoutput:
                 self.log_answer(cmd, buffer, valid_response)
+
+            # TODO: check if this 're-connection' is valid
+            # if valid_response == 'N':
+            #     # verify that the connection is still active, and
+            #     # reinitialize the connection
+            #     logging.warning('Command "{0}" was invalid. Reactivating '
+            #                     'the connection by sending "0100" and "atpc"')
+            #     self.send_command('0100')
+            #     self.send_command('atpc')
 
             return buffer, valid_response
         return None, None
