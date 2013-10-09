@@ -2,6 +2,7 @@
 
 import json
 import logging
+import threading
 import Queue
 
 import gevent
@@ -16,6 +17,7 @@ from flask import Response
 from flask import request
 
 from obd2lib.elmdecoder import decode_answer
+
 
 QUEUE = Queue.Queue()
 
@@ -64,11 +66,9 @@ def sse_request():
         mimetype='text/event-stream')
 
 
-if __name__ == '__main__':
-    logging.basicConfig(
-        format='%(levelname)s:%(asctime)s:%(name)s:%(message)s',
-        level=logging.DEBUG)
+class ServerMode(threading.Thread):
 
-    logging.info('Launching server on 127.0.0.1:5000')
-    http_server = WSGIServer(('127.0.0.1', 5000), app)
-    http_server.serve_forever()
+    def run(self):
+        logging.info('Launching server on 127.0.0.1:5000')
+        http_server = WSGIServer(('127.0.0.1', 5000), app)
+        http_server.serve_forever()

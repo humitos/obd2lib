@@ -1,0 +1,134 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import time
+import logging
+import argparse
+
+from cli.info import Info
+from cli.collect_data import CollectData
+from cli.run_expert import ExpertMode
+from cli.server import ServerMode
+from cli.generate_graphs import Graphic
+
+from obd2lib.elmdb import ELMdb
+
+
+def create_graphs(args):
+    graphic = Graphic(args.inputfile)
+    graphic.parse_data()
+    graphic.create_graph()
+
+    if args.convert_to_png:
+        graphic.convert_to_png()
+
+
+def collect_data(args):
+    logfile = time.strftime('%Y%m%d-%H%M%S-obd-data.log')
+    commands = ELMdb.keys()
+
+    if args.server:
+        server = ServerMode()
+        server.start()
+
+    collect = CollectData(
+        args.port, args.baudrate, args.connection_attempts, args.timeout,
+        logfile, commands, args.command_attempts, args.interval,
+        args.server)
+    collect.connect()
+    collect.run()
+
+
+def expert_mode(args):
+    expert_mode = ExpertMode(args.port, args.baudrate,
+                             args.connection_onnattempts, args.sertimeout,
+                             args.lazy)
+    expert_mode.connect()
+    expert_mode.run()
+
+
+def info(args):
+    info = Info(args.port, args.baudrate,
+                args.connection_attempts, args.sertimeout)
+    info.connect()
+    info.run()
+
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        description='Utility to get information from the car using OBDII '
+        'interface')
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--info', action='store_true',
+                       help='get compatibility information from car')
+    group.add_argument('--collect-data', action='store_true',
+                       help='collect data at intervals of time')
+    group.add_argument('--expert-mode',
+                       help='interactive expert mode',
+                       action='store_true')
+    group.add_argument('--create-graphs',
+                       help='create nice graphs from log file',
+                       action='store_true')
+
+    parser.add_argument('-p', '--port',
+                        help='port to connect (default: /dev/ttyUSB0)',
+                        default='/dev/ttyUSB0')
+
+    parser.add_argument('-b', '--baudrate', type=int,
+                        help='baudrate used to connect to the port '
+                        '(default: 38400)',
+                        default=38400)
+
+    parser.add_argument('-i', '--interval', type=int, default=1,
+                        help='interval between queries (default: 1)')
+
+    parser.add_argument('-a', '--connection-attempts', type=int, default=10,
+                        help='connection attempts (default: 10)')
+
+    parser.add_argument('-c', '--command-attempts', type=int, default=3,
+                        help='attempts to try an invalid command (default: 3)')
+
+    parser.add_argument('-t', '--timeout', type=int,
+                        help='timeout for the connection to the port '
+                        '(default: 10)',
+                        default=10)
+
+    parser.add_argument('-s', '--server',
+                        help='run the obd2lib web-interface',
+                        action='store_true')
+
+    parser.add_argument('--convert-to-png',
+                        help='convert graphics from .svg to .png (it requires '
+                        'inkscape)',
+                        action='store_true')
+
+    parser.add_argument('--lazy',
+                        help='decode answer to human-readable in expert mode',
+                        action='store_true')
+
+    parser.add_argument('inputfile',
+                        help='log file used to created the graphics',
+                        nargs='*')
+
+    parser.add_argument('-v', '--verbose',
+                        action='store_true',
+                        help='show logging.DEBUG into stdout')
+
+    args = parser.parse_args()
+
+    if args.verbose:
+        logging.basicConfig(
+            format='%(levelname)s:%(asctime)s:%(name)s:%(message)s',
+            level=logging.DEBUG)
+
+    if args.collect_data:
+        collect_data(args)
+    elif args.expert_mode:
+        expert_mode(args)
+    elif args.info:
+        info(args)
+    elif args.create_graphs:
+        create_graphs(args)
