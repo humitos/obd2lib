@@ -50,11 +50,11 @@ class CollectData(object):
         for i, command in enumerate(self.commands):
             if command in self.invalid_commands and \
                     self.invalid_commands[command] == self.command_attempts:
-                logging.info(' > Skipping command "{0}" ({1}/{2})...'
+                logging.info('Skipping command "{0}" ({1}/{2})...'
                              .format(command, i, len(self.commands)))
                 continue
 
-            logging.info(' > Excecuting command "{0}" ({1}/{2})...'
+            logging.info('Excecuting command "{0}" ({1}/{2})...'
                          .format(command, i, len(self.commands)))
             answer, valid = self.connector.run_OBD_command(command)
             timestamp = time.time()
@@ -72,7 +72,7 @@ class CollectData(object):
                 row = (command, answer, valid, timestamp)
                 writer.writerow(row)
 
-            if self.server and command in ['0105', '010C', '010E']:
+            if self.server:
                 data = json.dumps({
                         'answer': answer,
                         'command': command,
@@ -88,6 +88,8 @@ class CollectData(object):
         while self.keep_going:
             try:
                 self.collect()
+                logging.info('Waiting %s seconds before continue',
+                             self.interval)
                 time.sleep(self.interval)
             except KeyboardInterrupt:
                 self.keep_going = False

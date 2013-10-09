@@ -25,10 +25,17 @@ def create_graphs(args):
 
 def collect_data(args):
     logfile = time.strftime('%Y%m%d-%H%M%S-obd-data.log')
-    commands = ELMdb.keys()
+
+    # collect just supported data
+    info = Info(args.port, args.baudrate,
+                args.connection_attempts, args.timeout,
+                args.lazy)
+    info.connect()
+    commands = info.get_supported_pids()
+    info.disconnect()
 
     if args.server:
-        server = ServerMode()
+        server = ServerMode(commands)
         server.start()
 
     collect = CollectData(
@@ -83,7 +90,7 @@ if __name__ == '__main__':
                         '(default: 38400)',
                         default=38400)
 
-    parser.add_argument('-i', '--interval', type=int, default=1,
+    parser.add_argument('-i', '--interval', type=float, default=1,
                         help='interval between queries (default: 1)')
 
     parser.add_argument('-a', '--connection-attempts', type=int, default=10,

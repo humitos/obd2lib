@@ -20,6 +20,7 @@
   <body onload="init()">
     <script type="text/javascript">
       function init(){
+
 	  var temperature = new SmoothieChart({
 	      maxValue: 100,
 	      minValue: 0,
@@ -70,7 +71,7 @@
 		  element = 'speed';
 		  speed_line.append(new Date().getTime(), data.value);
 	      }
-	      if(data.indexOf(data.command) >= 0){
+	      if(data.command == "0105" || data.command == "010C" || data.command == "010D"){
 		  text = data.value + ' ' + data.unit;
 		  document.getElementById(element).innerHTML = text;
 	      }

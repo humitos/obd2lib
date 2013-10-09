@@ -77,6 +77,10 @@ class Info(object):
         logging.info('Connected')
 
     def get_supported_pids(self):
+        if self.connector is None:
+            logging.error('You should connect to the port first.')
+            sys.exit(1)
+
         supported_pids = []
 
         # check which commands are supported by this car
@@ -115,3 +119,9 @@ class Info(object):
             else:
                 logging.warning('Something wrong happened with "{0}" command'
                                 .format(command))
+
+        self.disconnect()
+
+    def disconnect(self):
+        self.connector.run_OBD_command('END')
+        logging.info('Disconnected')

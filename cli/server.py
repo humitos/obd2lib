@@ -12,13 +12,13 @@ gevent.monkey.patch_all()
 
 from flask import Flask
 from flask import render_template
-from flask import make_response
 from flask import Response
 from flask import request
 
 from obd2lib.elmdecoder import decode_answer
 
 
+SUPPORTED_PIDS = None
 QUEUE = Queue.Queue()
 
 app = Flask(__name__)
@@ -27,8 +27,8 @@ app.debug = True
 
 @app.route('/')
 def index():
-    response = make_response(render_template('index.html'))
-    return response
+    return render_template('index.html',
+                           **{'SUPPORTED_PIDS': SUPPORTED_PIDS})
 
 
 @app.route('/post', methods=['POST'])
@@ -67,6 +67,12 @@ def sse_request():
 
 
 class ServerMode(threading.Thread):
+
+    def __init__(self, supported_pids):
+        global SUPPORTED_PIDS
+        SUPPORTED_PIDS = supported_pids
+
+        super(ServerMode, self).__init__()
 
     def run(self):
         logging.info('Launching server on 127.0.0.1:5000')
