@@ -43,7 +43,7 @@ class Info(object):
         hexa = hex(integer).upper()[2:]
         return hexa
 
-    def supported_pids(self, answer, command):
+    def check_supported_pids(self, answer, command):
         n = command[2:]
         mode = command[:2]
 
@@ -76,25 +76,34 @@ class Info(object):
             sys.exit(1)
         logging.info('Connected')
 
-    def run(self):
-        if self.connector is None:
-            logging.error('You should connect to the port first.')
-            sys.exit(1)
-
+    def get_supported_pids(self):
         supported_pids = []
-
-        print('INFORMATION FETCHED FROM THE CAR')
-        print('--------------------------------\n\n')
 
         # check which commands are supported by this car
         for command in self.commands:
             result, validation = self.connector.run_OBD_command(command)
             if validation == 'Y':
                 value, unit = decode_answer(command, result)
-                supported_pids += self.supported_pids(value, command)
+                supported_pids += self.check_supported_pids(value, command)
+
+        return supported_pids
+
+    def run(self):
+        if self.connector is None:
+            logging.error('You should connect to the port first.')
+            sys.exit(1)
+
+        print('INFORMATION FETCHED FROM THE CAR')
+        print('--------------------------------\n\n')
+
+        supported_pids = self.get_supported_pids()
 
         # use the supported commands to get some info
         for command in supported_pids:
+            # do not run check (supported pids) commands
+            if command in self.commands:
+                continue
+
             result, validation = self.connector.run_OBD_command(command)
             if validation == 'Y':
                 if self.lazy:
