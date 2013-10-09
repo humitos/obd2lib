@@ -43,8 +43,8 @@ class Elm(threading.Thread):
         super(Elm, self).__init__(name="ELM")
         self.is_exit = False
         self.ser = serial.Serial(port, timeout=1)
-        self.ECHO = 1
-        self.HEADER = 0
+        self.ECHO = 0
+        self.HEADER = 1
         self.status = self.IDLE
         self.sensors = []
         return
