@@ -3,8 +3,10 @@
 import sys
 import csv
 import time
+import json
 import logging
 import argparse
+import requests
 
 from obd2lib.elmdb import ELMdb
 from obd2lib.obdconnector import OBDConnector
@@ -14,7 +16,7 @@ class CollectData(object):
 
     def __init__(self, port, baudrate, reconnattempts,
                  sertimeout, logfile, commands,
-                 command_attempts, interval):
+                 command_attempts, interval, server):
 
         self.commands = commands
         self.command_attempts = command_attempts
@@ -23,6 +25,8 @@ class CollectData(object):
         self.keep_going = True
         self.connector = None
         self.interval = interval
+        self.server = server
+        self.server_post_url = 'http://127.0.0.1:5000/post'
 
         self.port = port
         self.baudrate = baudrate
@@ -53,7 +57,7 @@ class CollectData(object):
             logging.info(' > Excecuting command "{0}" ({1}/{2})...'
                          .format(command, i, len(self.commands)))
             answer, valid = self.connector.run_OBD_command(command)
-
+            timestamp = time.time()
             if valid == 'N':
                 # do not call this command again after
                 # "self.command_attempt" times
@@ -65,8 +69,16 @@ class CollectData(object):
             with open(self.logfile, 'ab') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',',
                                     quoting=csv.QUOTE_ALL)
-                row = (command, answer, valid, time.time())
+                row = (command, answer, valid, timestamp)
                 writer.writerow(row)
+
+            if self.server and command in ['0105', '010C', '010E']:
+                data = json.dumps({
+                        'answer': answer,
+                        'command': command,
+                        'timestamp': timestamp,
+                        })
+                requests.post(url=self.server_post_url, data=data)
 
     def disconnect(self):
         self.connector.run_OBD_command('END')
@@ -106,6 +118,10 @@ if __name__ == '__main__':
         help='timeout for the connection to the port (default: 10)',
         default=10)
     parser.add_argument(
+        '-s', '--server',
+        help='post values to obd2lib server',
+        action='store_true')
+    parser.add_argument(
         '-v', '--verbose', action="store_true",
         help='show logging.DEBUG into stdout')
 
@@ -121,6 +137,7 @@ if __name__ == '__main__':
 
     collect = CollectData(
         args.port, args.baudrate, args.attempts, args.timeout,
-        logfile, commands, args.command_attempts, args.interval)
+        logfile, commands, args.command_attempts, args.interval,
+        args.server)
     collect.connect()
     collect.run()

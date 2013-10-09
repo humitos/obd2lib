@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+  <head>
+    <title>real time | obd2lib</title>
+    <script src="https://raw.github.com/joewalnes/smoothie/master/smoothie.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
+    <style type="text/css">
+      body {
+	  width: 800px;
+	  margin: auto;
+      }
+
+      p {
+	  text-align: right;
+      }
+    </style>
+  </head>
+
+  <body onload="init()">
+    <script type="text/javascript">
+      function init(){
+	  var temperature = new SmoothieChart({
+	      maxValue: 100,
+	      minValue: 0,
+	      interpolation: 'linear',
+	      horizontalLines: [{color: '#ff0000', lineWidth: 1, value: 90}],
+	  });
+	  temperature.streamTo(document.getElementById("0105"), 1000 /*delay*/);
+
+	  var rpm = new SmoothieChart({
+	      maxValue: 4500,
+	      minValue: 0,
+	      interpolation: 'linear',
+	      horizontalLines: [{color: '#ff0000', lineWidth: 1, value: 3500}],
+	  });
+	  rpm.streamTo(document.getElementById("010C"), 1000 /*delay*/);
+
+	  var speed = new SmoothieChart({
+	      maxValue: 170,
+	      minValue: 0,
+	      interpolation: 'linear',
+	      horizontalLines: [{color: '#ff0000', lineWidth: 1, value: 110}],
+	  });
+	  speed.streamTo(document.getElementById("010D"), 1000 /*delay*/);
+
+	  // Data
+	  var temp_line = new TimeSeries();
+	  var rpm_line = new TimeSeries();
+	  var speed_line = new TimeSeries();
+
+	  // Add to SmoothieChart
+	  temperature.addTimeSeries(temp_line, {lineWidth: 2, strokeStyle: '#00ff00'});
+	  rpm.addTimeSeries(rpm_line, {lineWidth: 2, strokeStyle: '#00ff00'});
+	  speed.addTimeSeries(speed_line, {lineWidth: 2, strokeStyle: '#00ff00'});
+
+	  // Parse SSE and update elements
+	  var source = new EventSource("/stream");
+	  source.onmessage = function(event){
+	      var data = JSON.parse(event.data);
+	      if(data.command == "0105"){
+		  element = 'temp';
+		  temp_line.append(new Date().getTime(), data.value);
+	      }
+	      else if(data.command == "010C"){
+		  element = 'rpm';
+		  rpm_line.append(new Date().getTime(), data.value);
+	      }
+	      else if(data.command == "010D"){
+		  element = 'speed';
+		  speed_line.append(new Date().getTime(), data.value);
+	      }
+	      if(data.indexOf(data.command) >= 0){
+		  text = data.value + ' ' + data.unit;
+		  document.getElementById(element).innerHTML = text;
+	      }
+	  }
+      }
+    </script>
+
+    <h1>obd2lib</h1>
+
+    <h4>Temperature</h4>
+    <canvas id="0105" width="800" height="150"></canvas>
+    <p id="temp"></p>
+
+    <h4>RPM</h4>
+    <canvas id="010C" width="800" height="150"></canvas>
+    <p id="rpm"></p>
+
+    <h4>Speed</h4>
+    <canvas id="010D" width="800" height="150"></canvas>
+    <p id="speed"></p>
+
+  </body>
+</html>
