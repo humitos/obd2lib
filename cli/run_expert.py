@@ -49,7 +49,7 @@ class ExpertMode(object):
             logging.error('You should connect to the port first.')
             sys.exit(1)
 
-        logging.info(' > Launching Expert Mode console...')
+        logging.info('Launching Expert Mode console...')
         choice = ''
         valid_answers = ['Y', 'N']
         while choice not in valid_answers:
@@ -91,7 +91,7 @@ class ExpertMode(object):
                                 print(result)
                 except KeyboardInterrupt:
                         break
-        logging.info(' >>> Expert mode aborted by user, finishing...')
+        logging.info('Expert mode aborted by user, finishing...')
         self.connector.run_OBD_command('END', expert=True)
 
 

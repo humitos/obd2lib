@@ -43,7 +43,7 @@ def decode_answer(cmd, answer):
     value = None
     unit = None
     payload = extract_payload(cmd, answer)
-    if cmd == '0100':
+    if cmd in ['0100', '0120', '0140', '0160', '0180', '01A0', '01C0']:
         value = payload
 
     elif cmd == '0101':
