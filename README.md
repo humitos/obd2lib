@@ -43,6 +43,21 @@ and ELM pdf datasheet:
 
  * http://elmelectronics.com/DSheets/ELM327DS.pdf
 
+Also, there is a built-in decoder to a human-readable way:
+
+    >>> from obd2lib import elmdecoder
+    >>> from obd2lib.obdconnector import OBDConnector
+    >>> connector = OBDConnector('/dev/ttyUSB0', 38400, 5, 10)
+    >>> connector.initCommunication()
+    1
+    >>> answer, valid = connector.run_OBD_command('010F')
+    >>> answer, valid
+    ('48 6B 10 41 0F 63 76', 'Y')
+    >>> elmdecoder.decode_answer('010F', answer)
+    (59, 'Degrees Celsius')
+    >>> connector.run_OBD_command('END')
+    >>>
+
 
 Collect and create graphics
 ---------------------------
@@ -54,28 +69,6 @@ with another script (``generate_graphs.py``) to create some nice
 graphics like this one:
 
 ![](http://oi41.tinypic.com/vxlt7n.jpg)
-
-
-Requeriments
-------------
-
- * pyserial: http://pyserial.sourceforge.net/
- * pygal: http://pygal.org/ (required to create graphics)
- * argparse: https://pypi.python.org/pypi/argparse (just for Python < 2.7)
- * inkscape: http://inkscape.org/ (required to convert .svg to .png)
-
-Using pip:
-
-    pip install pyserial pygal argparse
-
-or
-
-    pip install -r requeriments.txt
-
-
-and in Ubuntu (or Debian derivates):
-
-    sudo apt-get install inkscape
 
 
 Permissions
@@ -116,26 +109,31 @@ Now, I can connect the "rs232-obd-sim" to /dev/pts/4
     Starting...
     CAR>
 
-and, for example, the "run_expert.py" script to /dev/pts/5
+and, for example, the "obd2" into --expert mode to /dev/pts/5
 
-     $ python run_expert.py -p /dev/pts/5
+     $ ./obd2 --expert --port /dev/pts/5 --lazy
+     WARNING: You are enabling EXPERT mode!
+
      It allows to perform any OBD command against Electronic Control Units.
      May lead to harm in your car if not used wisely. Do you wish to proceed? (Y/N) Y
      WARNING:root:*** DISCLAIMER: There is absolutely no warranty for
      any action performed by the user from here on ***
 
      Type "quit" or CTRL-C to exit
-     ROOT@KT-OBD> 0100
-     0100  41 00 BE 3E A8 11
-     ROOT@KT-OBD> 0101
-     0101  41 01 83 07 E5 00
-     ROOT@KT-OBD> 03
-     03  43 01 43 01 44 01 52
-     ROOT@KT-OBD> 07
-     07  47 01 44 00 00 00 00
-     ROOT@KT-OBD> 0101
-     0101  41 01 83 07 E5 00
-     ROOT@KT-OBD> 011c
-     011C  41 1C 06
+     ROOT@KT-OBD> 0105
+     48 6B 10 41 05 37 40
+     ROOT@KT-OBD> 010E
+     48 6B 10 41 0E 63 75
+     ROOT@KT-OBD> 010F
+     48 6B 10 41 0F 63 76
      ROOT@KT-OBD> quit
      $
+
+or, if you want to know WTF those values mean, you can run it with the --lazy option
+
+     ROOT@KT-OBD> 0105
+     15 Degrees Celsius
+     ROOT@KT-OBD> 010E 
+     -14.5 Degrees
+     ROOT@KT-OBD> 010F    
+     59 Degrees Celsius
