@@ -33,7 +33,7 @@ How to use it
 
 
 How to read the answers
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 All the information needed to decode the answer is in Wikipedia:
 
@@ -59,16 +59,65 @@ Also, there is a built-in decoder to a human-readable way:
     >>>
 
 
-Collect and create graphics
----------------------------
+Command Line Interface (CLI)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-I wrote two command line utilities to collect data
-(``collect_data.py``) through the OBD-II interface while your are
-driving and store it in a file. After that, this file is processed
-with another script (``generate_graphs.py``) to create some nice
-graphics like this one:
+There is a command-line interface available in the respository. It
+uses ``obd2lib`` to collect data at intervals of time from the car and
+create some nice graphics.
 
-![](http://oi41.tinypic.com/vxlt7n.jpg)
+    $ ./obd2 --help
+    usage: obd2 [-h] (--info | --collect-data | --expert-mode | --create-graphs)
+                [-p PORT] [-b BAUDRATE] [-i INTERVAL] [-a CONNECTION_ATTEMPTS]
+                [-c COMMAND_ATTEMPTS] [-t TIMEOUT] [-s] [--convert-to-png]
+                [--lazy] [-v]
+                [inputfile [inputfile ...]]
+    Utility to get information from the car using OBDII interface
+
+    positional arguments:
+      inputfile             log file used to created the graphics
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --info                get compatibility information from car
+      --collect-data        collect data at intervals of time
+      --expert-mode         interactive expert mode
+      --create-graphs       create nice graphs from log file
+      -p PORT, --port PORT  port to connect (default: /dev/ttyUSB0)
+      -b BAUDRATE, --baudrate BAUDRATE
+                            baudrate used to connect to the port (default: 38400)
+      -i INTERVAL, --interval INTERVAL
+                            interval between queries (default: 1)
+      -a CONNECTION_ATTEMPTS, --connection-attempts CONNECTION_ATTEMPTS
+                            connection attempts (default: 10)
+      -c COMMAND_ATTEMPTS, --command-attempts COMMAND_ATTEMPTS
+                            attempts to try an invalid command (default: 3)
+      -t TIMEOUT, --timeout TIMEOUT
+                            timeout for the connection to the port (default: 10)
+      -s, --server          run the obd2lib web-interface
+      --convert-to-png      convert graphics from .svg to .png (it requires
+                            inkscape)
+      --lazy                decode answer to human-readable in expert mode
+      -v, --verbose         show logging.DEBUG into stdout
+
+There are 4 major modes:
+
+#. **--info**: this mode connects to the ELM327 and fetchs all the
+   supported information by the car just once and print it into the
+   screen.
+
+#. **--collect-data**: runs as a daemon fetching the supported
+   information by the car at ``--interval``s of time. This is useful
+   to check the status of the car while you are driving or to fix some
+   issue.
+
+#. **--expert-mode**: launchs an interactive console where you can
+   execute any PID (supported and not supported) to check something
+   specific.
+
+#. **--create-graphs**: this mode uses the information collected by
+   ``--collect-data`` and create some [nice .svg
+   graphs](http://oi41.tinypic.com/vxlt7n.jpg) using *pygal*
 
 
 Permissions
@@ -84,7 +133,8 @@ Simulator
 
 I borrow the "rs232-obd-sim" from here
 (http://code.google.com/p/rs232-obd-sim/) and I'm using it to make
-some test in the development process.
+some test in the development process. *NOTE: I changed some minor
+things to make it more compatible with obd2lib*
 
 It requires "socat". So in Ubuntu I installed it by doing:
 
