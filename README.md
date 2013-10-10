@@ -33,7 +33,7 @@ How to use it
 
 
 How to read the answers
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 All the information needed to decode the answer is in Wikipedia:
 
@@ -60,7 +60,7 @@ Also, there is a built-in decoder to a human-readable way:
 
 
 Command Line Interface (CLI)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 There is a command-line interface available in the respository. It
 uses ``obd2lib`` to collect data at intervals of time from the car and
@@ -102,20 +102,20 @@ create some nice graphics.
 
 There are 4 major modes:
 
-#. **--info**: this mode connects to the ELM327 and fetchs all the
+1. **--info**: this mode connects to the ELM327 and fetchs all the
    supported information by the car just once and print it into the
    screen.
 
-#. **--collect-data**: runs as a daemon fetching the supported
+1. **--collect-data**: runs as a daemon fetching the supported
    information by the car at ``--interval``s of time. This is useful
    to check the status of the car while you are driving or to fix some
    issue.
 
-#. **--expert-mode**: launchs an interactive console where you can
+1. **--expert-mode**: launchs an interactive console where you can
    execute any PID (supported and not supported) to check something
    specific.
 
-#. **--create-graphs**: this mode uses the information collected by
+1. **--create-graphs**: this mode uses the information collected by
    ``--collect-data`` and create some [nice .svg
    graphs](http://oi41.tinypic.com/vxlt7n.jpg) using *pygal*
 
