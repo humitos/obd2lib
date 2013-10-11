@@ -15,6 +15,7 @@ from flask import render_template
 from flask import Response
 from flask import request
 
+from obd2lib.elmdb import ELMdb
 from obd2lib.elmdecoder import decode_answer
 
 
@@ -27,8 +28,24 @@ app.debug = True
 
 @app.route('/')
 def index():
+    supported_pids = []
+    for sp in SUPPORTED_PIDS:
+        if not (
+            sp in ELMdb and
+            'max_value' in ELMdb[sp] and
+            'min_value' in ELMdb[sp]
+            ):
+            continue
+        try:
+            supported_pids.append(dict(ELMdb[sp], pid=sp))
+        except KeyError:
+            logging.debug('"%s" not in ELMdb')
+
+    data = {
+        'SUPPORTED_PIDS': supported_pids,
+        }
     return render_template('index.html',
-                           **{'SUPPORTED_PIDS': SUPPORTED_PIDS})
+                           **data)
 
 
 @app.route('/post', methods=['POST'])

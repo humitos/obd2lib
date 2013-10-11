@@ -21,59 +21,43 @@
     <script type="text/javascript">
       function init(){
 
-	  var temperature = new SmoothieChart({
-	      maxValue: 100,
-	      minValue: 0,
-	      interpolation: 'linear',
-	      horizontalLines: [{color: '#ff0000', lineWidth: 1, value: 90}],
-	  });
-	  temperature.streamTo(document.getElementById("0105"), 1000 /*delay*/);
+	  var charts = [];
+	  var lines = {};
 
-	  var rpm = new SmoothieChart({
-	      maxValue: 4500,
-	      minValue: 0,
+	  {% for pid in SUPPORTED_PIDS %}
+	  chart_{{ pid.pid }} = new SmoothieChart({
+	      maxValue: {{ pid.max_value }},
+	      minValue: {{ pid.min_value }},
 	      interpolation: 'linear',
-	      horizontalLines: [{color: '#ff0000', lineWidth: 1, value: 3500}],
+	      {% if pid.warning_value %}
+	      horizontalLines: [{color: '#ff0000', lineWidth: 1,
+				 value: {{ pid.warning_value}} }],
+	      {% endif %}
 	  });
-	  rpm.streamTo(document.getElementById("010C"), 1000 /*delay*/);
-
-	  var speed = new SmoothieChart({
-	      maxValue: 170,
-	      minValue: 0,
-	      interpolation: 'linear',
-	      horizontalLines: [{color: '#ff0000', lineWidth: 1, value: 110}],
-	  });
-	  speed.streamTo(document.getElementById("010D"), 1000 /*delay*/);
+	  chart_{{ pid.pid }}.streamTo(document.getElementById("chart-{{ pid.pid }}"), 1000 /*delay*/);
+	  charts.push(chart_{{ pid.pid }})
 
 	  // Data
-	  var temp_line = new TimeSeries();
-	  var rpm_line = new TimeSeries();
-	  var speed_line = new TimeSeries();
+	  line_{{ pid.pid }} = new TimeSeries();
+	  lines["{{ pid.pid }}"] = line_{{ pid.pid }};
 
 	  // Add to SmoothieChart
-	  temperature.addTimeSeries(temp_line, {lineWidth: 2, strokeStyle: '#00ff00'});
-	  rpm.addTimeSeries(rpm_line, {lineWidth: 2, strokeStyle: '#00ff00'});
-	  speed.addTimeSeries(speed_line, {lineWidth: 2, strokeStyle: '#00ff00'});
+	  chart_{{ pid.pid }}.addTimeSeries(line_{{ pid.pid }}, {lineWidth: 2, strokeStyle: '#00ff00'})
+	  {% endfor %}
 
 	  // Parse SSE and update elements
 	  var source = new EventSource("/stream");
 	  source.onmessage = function(event){
 	      var data = JSON.parse(event.data);
-	      if(data.command == "0105"){
-		  element = 'temp';
-		  temp_line.append(new Date().getTime(), data.value);
-	      }
-	      else if(data.command == "010C"){
-		  element = 'rpm';
-		  rpm_line.append(new Date().getTime(), data.value);
-	      }
-	      else if(data.command == "010D"){
-		  element = 'speed';
-		  speed_line.append(new Date().getTime(), data.value);
-	      }
-	      if(data.command == "0105" || data.command == "010C" || data.command == "010D"){
+	      try {
+		  lines[data.command].append(new Date().getTime(), data.value);
 		  text = data.value + ' ' + data.unit;
-		  document.getElementById(element).innerHTML = text;
+		  document.getElementById("text-" + data.command).innerHTML = text;
+	      }
+	      catch (err) {
+		  // there is an error here because there are some
+		  // pids that do not have the proper max_value and so
+		  // they are not created
 	      }
 	  }
       }
@@ -81,17 +65,11 @@
 
     <h1>obd2lib</h1>
 
-    <h4>Temperature</h4>
-    <canvas id="0105" width="800" height="150"></canvas>
-    <p id="temp"></p>
-
-    <h4>RPM</h4>
-    <canvas id="010C" width="800" height="150"></canvas>
-    <p id="rpm"></p>
-
-    <h4>Speed</h4>
-    <canvas id="010D" width="800" height="150"></canvas>
-    <p id="speed"></p>
+    {% for pid in SUPPORTED_PIDS %}
+    <h4>{{ pid.description }}</h4>
+    <canvas id="chart-{{ pid.pid  }}" width="800" height="150"></canvas>
+    <p id="text-{{ pid.pid }}"></p>
+    {% endfor %}
 
   </body>
 </html>
