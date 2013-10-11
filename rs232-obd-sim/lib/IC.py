@@ -143,8 +143,8 @@ class Elm(threading.Thread):
 
     def notify(self, command):
         debug('Received command %s'%repr(command))
-        if command[:1] == 'AT':
-            atcommand = command[1:].strip()
+        if command[:2] == 'AT':
+            atcommand = command[2:].strip()
             if atcommand == 'Z':
                 self.doReset()
             elif atcommand == 'I':
