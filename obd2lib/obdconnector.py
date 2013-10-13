@@ -51,15 +51,15 @@ class OBDConnector(object):
                 .get_result(obd_command)
 
             if bus_data:
-                if (re.search('UNABLE', bus_data) or
-                        re.search('BUSY', bus_data) or
-                        re.search('ERROR', bus_data)) and \
+                if re.search('UNABLE|BUSY|ERROR|ERR|STOPPED', bus_data,
+                             flags=re.IGNORECASE) and \
                         not expert:
                     logging.warning(
                         'Unable to connect to OBD socket while getting '
                         'parameters, shutting down app... Please check port '
                         'configuration, connectivity between laptop and OBD '
                         'socket, and turn the ignition on in the car!')
+                    logging.error('ERROR MESSAGE: %s', bus_data)
                     self.OBD_Interface.close()
                     sys.exit(1)
                 return bus_data, validation_test
